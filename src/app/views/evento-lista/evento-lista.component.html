@@ -1,0 +1,74 @@
+<div class="container py-5">
+    <div class="rounded shadow p-5 d-flex">
+        <img src="/assets/task.svg" alt="" width="250">
+        <div>
+            <h3 class="text-primary">Bienvenido al Sistema de Gestion de Eventos</h3>
+            <h5 class="text-secondary">Con esta aplicación podras crear, actualizar y eliminar tus eventos</h5>
+            <hr>
+            <p class="text-muted">
+                Esta aplicación fue creada con Spring Boot, Angular y BD MongoDB
+            </p>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-md-6">
+            <h3> Lista de Eventos</h3>
+            <div class="my-5"></div>
+            <div *ngFor="let evento of eventos" class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ evento.nombreEvento }}</strong>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fa fa-calendar"></i> {{ evento.fechaEvento | fechaFormato }}
+                            </small>
+                        </div>
+                        <div class="text-muted">
+                            <i class="fa fa-edit cursor-pointer" title="Editar Evento" (click)="edit(evento)" ></i>
+                            <i class="fa fa-trash ms-2 cursor-pointer" title="Eliminar Evento" (click)="delete(evento)"></i>
+                        </div>
+                    </div>
+                    <!-- <div>
+                        {{tarea.completado ? 'Completado':'Pendiente'}}
+                    </div> -->
+                    <div>
+                        <small class="text-success" *ngIf="evento.completado; else noCompletado">
+                            <i class="fa fa-check-circle"></i> Completado
+                        </small>
+                        <ng-template #noCompletado >
+                            <small class="text-danger" >
+                                <i class="fa fa-clock"></i> Pendiente
+                            </small>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3> {{evento.id ? 'Editar' : 'Nuevo'  }} Evento</h3>
+            <form class="mt-5" (ngSubmit)="save()">
+                <div class="mb-3 form-floating">
+                    <input id="nombre" type="text" placeholder="Evento" name="nombre" class="form-control" [(ngModel)]="evento.nombreEvento">
+                    <label for="nombre">Evento</label>    
+                </div>
+                <div class="mb-3 form-check">
+                    <input id="completado" type="checkbox" name="completado" class="form-check-input" [(ngModel)]="evento.completado">
+                    <label for="completado" class="form-check-label">Completado</label>    
+                </div>
+                <div class="mb-3 form-floating">
+                    <input id="fechaEvento"
+                    [ngModel]="formatDateToInput(evento.fechaEvento)" 
+                    (ngModelChange)="evento.fechaEvento = $event"
+                    type="datetime-local" 
+                    class="form-control" 
+                    name="fechaEvento">
+                    <label for="fechaEvento">Fecha y Hora del Evento</label>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-primary btn-lg"> Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

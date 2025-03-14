@@ -1,0 +1,13 @@
+.container {
+    max-width: 400px;
+    margin-top: 50px;
+  }
+  
+  h3 {
+    color: #007bff;
+  }
+  
+  button {
+    width: 100%;
+  }
+  
