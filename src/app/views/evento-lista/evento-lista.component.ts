@@ -1,63 +1,59 @@
-import { Component } from '@angular/core';
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
 import { EventoService } from '../../controllers/evento.service';
 import { Evento } from '../../models/evento.model';
 import Swal from 'sweetalert2';
+import { isPlatformBrowser } from '@angular/common';
 
 @Component({
   selector: 'app-evento-lista',
   templateUrl: './evento-lista.component.html',
   styleUrl: './evento-lista.component.css'
 })
-export class EventoListaComponent  {
+export class EventoListaComponent {
   title = 'gestion-eventos-front';
-  eventos : any [] =[];
+  eventos: any[] = [];
   evento: Evento = new Evento(); // Inicialización directa
 
-  constructor( private appService:EventoService){
+  constructor(
+    private appService: EventoService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
-  }
   ngOnInit(): void {
-    const token = localStorage.getItem('token'); // Verificar si el token existe
+    let token: string | null = null;
+
+    // ✅ Verifica si estamos en el navegador antes de acceder a localStorage
+    if (isPlatformBrowser(this.platformId)) {
+      token = localStorage.getItem('token');
+    }
+
     if (!token) {
       Swal.fire('Acceso denegado', 'Por favor, inicia sesión para continuar.', 'warning');
-      return; // Detener la ejecución si no hay token
+      return; // 🚨 Detiene la ejecución si no hay token
     }
+
     this.getAll();
-    this.evento = {
-      id: null,
-      nombreEvento: '',
-      completado: false,
-      fechaEvento: new Date() // Almacenar como Date
-    };
-    
-  } 
+    this.resetEvento(); // 🟢 Usa una función para resetear el evento
+  }
 
   /**
    * 🔹 Convierte una fecha de `Date` al formato `yyyy-MM-ddTHH:mm`
    */
-
-
   formatDateToInput(date: any): string {
     if (!date) return '';
-  
+
     const fecha = new Date(date);
     if (isNaN(fecha.getTime())) return ''; // Verificar que la fecha sea válida
-  
+
     const pad = (num: number) => num.toString().padStart(2, '0');
-  
-    const year = fecha.getFullYear();
-    const month = pad(fecha.getMonth() + 1);
-    const day = pad(fecha.getDate());
-    const hours = pad(fecha.getHours());
-    const minutes = pad(fecha.getMinutes());
-  
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+
+    return `${fecha.getFullYear()}-${pad(fecha.getMonth() + 1)}-${pad(fecha.getDate())}T${pad(fecha.getHours())}:${pad(fecha.getMinutes())}`;
   }
 
   /**
    * 🔹 Obtiene todos los eventos y les da formato a las fechas.
    */
-  getAll() {
+  getAll(): void {
     this.appService.getAll().subscribe((data: Evento[]) => {
       this.eventos = data.map(evento => ({
         ...evento,
@@ -69,28 +65,22 @@ export class EventoListaComponent  {
   /**
    * 🔹 Guarda un evento (crea o actualiza).
    */
-  save() {
-
+  save(): void {
     if (!this.evento.nombreEvento || typeof this.evento.nombreEvento !== 'string' || this.evento.nombreEvento.trim() === '') {
       Swal.fire({
         icon: 'warning',
         title: 'Nombre requerido',
         text: 'Por favor, ingrese un nombre para el evento.',
       });
-      return; // Detener ejecución si el nombre no es válido
+      return; // 🚨 Detener ejecución si el nombre no es válido
     }
+
     if (typeof this.evento.fechaEvento === 'string') {
       this.evento.fechaEvento = new Date(this.evento.fechaEvento); // Convertimos el string a Date antes de enviarlo
     }
-  
-    // if (this.evento.id) {
-    //   this.appService.update(this.evento.id!, this.evento).subscribe(() => this.getAll());
-    // } else {
-    //   this.appService.create(this.evento).subscribe(() => this.getAll());
-    // }
 
     if (this.evento.id) {
-      this.appService.update(this.evento.id!, this.evento).subscribe(() => {
+      this.appService.update(this.evento.id, this.evento).subscribe(() => {
         this.getAll();
         Swal.fire({
           icon: 'success',
@@ -108,14 +98,8 @@ export class EventoListaComponent  {
         });
       });
     }
-  
-    // Reiniciamos el formulario
-    this.evento = {
-      id: null,
-      nombreEvento: '',
-      completado: false,
-      fechaEvento: new Date()
-    };
+
+    this.resetEvento(); // 🟢 Reinicia el formulario
   }
 
   /**
@@ -128,10 +112,6 @@ export class EventoListaComponent  {
   /**
    * 🔹 Elimina un evento por ID.
    */
-  // delete(evento: Evento): void {
-  //   this.appService.delete(evento.id!).subscribe(() => this.getAll());
-  // }
-
   delete(evento: Evento): void {
     Swal.fire({
       title: '¿Estás seguro?',
@@ -153,9 +133,14 @@ export class EventoListaComponent  {
   }
 
   /**
-   * 🔹 Resetea el formulario.
+   * 🔹 Resetea el formulario de evento.
    */
   private resetEvento(): void {
-    this.evento = new Evento();
+    this.evento = {
+      id: null,
+      nombreEvento: '',
+      completado: false,
+      fechaEvento: new Date()
+    };
   }
 }
